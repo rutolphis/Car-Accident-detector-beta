@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/route/route.dart' as route;
 import 'package:flutter_blue/flutter_blue.dart';
-
+import 'package:app/pages/visualization_screen.dart';
 
 
 class connect extends StatefulWidget {
@@ -18,6 +18,7 @@ class _connectState extends State<connect> {
   var device;
 
   bool bluetoothConnection (){
+
     FlutterBlue.instance.state.listen((state) async {
       if (state == BluetoothState.off) {
         print("Bluetooth is off.");
@@ -68,6 +69,9 @@ class _connectState extends State<connect> {
       print("Pripojene zariadenia: $connectedDevices");
       if(connectedDevices.contains(device)) {
           print('pripojene');
+          Future.delayed(Duration(seconds: 2), () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (context) => visualization(device: device)));
+          });
       }
       else {
           print('neni');
