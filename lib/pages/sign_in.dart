@@ -22,8 +22,8 @@ class signIn extends StatelessWidget {
                     labelStyle: TextStyle(
                       color: Color(0xFF0D67B5),
                     ))),
-            ElevatedButton(onPressed: () => Navigator.pushNamed(context, route.connectPage),
-            child: Text('Sign In'))
+                ElevatedButton(onPressed: () => Navigator.pushNamed(context, route.connectPage),
+                    child: Text('Sign In'))
           ]
       ),
 
