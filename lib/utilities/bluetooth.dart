@@ -4,15 +4,21 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart';
-
-
+import 'package:app/utilities/gps.dart';
+import 'package:app/utilities/car.dart';
+import 'package:app/route/route.dart' as route;
+import 'package:app/main.dart';
 
 class BluetoothConnection extends ChangeNotifier{
   var device;
-  var speed;
+  late Gps location;
+  late Car car;
   FlutterBlue flutterBlue = FlutterBlue.instance;
 
   BluetoothConnection(){
+    this.location = new Gps();
+    this.car = new Car();
+
   }
 
   Future<bool> bluetoothConnection (){
@@ -37,6 +43,8 @@ class BluetoothConnection extends ChangeNotifier{
                   return Future.value(false);
                 }
               }
+              receiveData();
+              accidentCheck();
             }
           }
         });
@@ -80,7 +88,7 @@ class BluetoothConnection extends ChangeNotifier{
     }
   }
 
-  void searchServices() async {
+  void receiveData() async {
     var targetCharacteristic;
     if(this.device != null) {
       List<BluetoothService> services = await this.device.discoverServices();
@@ -95,7 +103,7 @@ class BluetoothConnection extends ChangeNotifier{
             //  c.uuid.toString() == "00000003-710e-4a5b-8d75-3e5b444bc3cf") {
             await c.setNotifyValue(true);
             c.value.listen((v) {
-              this.speed = utf8.decode(v);
+              this.car.setSpeed(utf8.decode(v));
               notifyListeners();
               print('data: ${utf8.decode(v)}');
             });
@@ -113,17 +121,67 @@ class BluetoothConnection extends ChangeNotifier{
     }
   }
 
-  String getSpeed(){
-    if(this.speed == null){
-      return "0";
+  void accidentCheck()  {
+    print("nehoda kontrola zacala");
+    check() async {
+      var connectionStatus = await checkConnection(this.device);
+      if(connectionStatus == true) {
+        if (this.car.getSpeed() == 11) {
+          print('Nehoda sa stala!');
+          sendData();
+        } else {
+          print('Neni nehoda!');
+          new Timer(Duration(milliseconds: 2000), check);
+        }
+      }
+      else {
+        navigatorKey.currentState?.pushNamed(route.connectPage);
+      }
     }
-    else{
-      return this.speed;
+    check();
+    return;
+
+  }
+
+  void sendData() async {
+    Response response;
+    final uri = Uri.parse('https://bakalarka-app.herokuapp.com/api/bakalarka/nehoda');
+    final headers = {'Content-Type': 'application/json'};
+    Map<String, dynamic> body = { "latitude":48.394478,"longitude":17.940886,"vin":"WVWZZZ1KZ6B049523","fuel_type":1,"fuel_amount":25,"pedal_position":336,"speed":125,"acceleration":15.88,"rotation":11.2569,"occupied_seats":4};
+    String jsonBody = json.encode(body);
+    final encoding = Encoding.getByName('utf-8');
+
+    try {
+      response = await post(
+        uri,
+        headers: headers,
+        body: jsonBody,
+        encoding: encoding,
+      ).then((response) {
+        print(response.statusCode);
+        return Future.value(response);
+      });
     }
+    catch(error) {
+      print(error);
+    }
+
   }
 
   BluetoothDevice? getDevice(){
-    return device;
+    return this.device;
+  }
+
+  Future<bool> disconnectDevice() async {
+    try {
+      await this.device.disconnect();
+    }
+    catch (error) {
+      print(error);
+      return Future.value(false);
+    }
+
+    return Future.value(true);
   }
 
 

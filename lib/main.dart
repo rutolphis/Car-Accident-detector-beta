@@ -4,15 +4,19 @@ import 'package:provider/provider.dart';
 import 'package:app/utilities/bluetoothService.dart';
 import 'package:app/utilities/bluetooth.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() {
+
   runApp(
       ChangeNotifierProvider<BluetoothConnection>(
           lazy: false,
           create: (_) => BluetoothConnection(),
           child:
             MaterialApp(
-          onGenerateRoute: route.controller,
-          initialRoute: route.welcomePage,
+              onGenerateRoute: route.controller,
+              initialRoute: route.welcomePage,
+              navigatorKey: navigatorKey,
         ))
   );
 }

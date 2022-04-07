@@ -6,13 +6,13 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:app/utilities/bluetoothService.dart';
 import 'package:app/utilities/bluetooth.dart';
+import 'package:flutter_speedometer/flutter_speedometer.dart';
 
 
 class visualization extends StatefulWidget {
   @override
   var device;
-  visualization({this.device});
-  _visualizationState createState() => _visualizationState(device);
+  _visualizationState createState() => _visualizationState();
 
 }
 
@@ -24,25 +24,69 @@ class _visualizationState extends State<visualization> {
   void initState() {
     connection = Provider
         .of<BluetoothConnection>(context, listen: false);
-    connection.searchServices();
     super.initState();
   }
-
-  _visualizationState(this.device);
 
   FlutterBlue flutterBlue = FlutterBlue.instance;
 
 
     @override
     Widget build(BuildContext context) {
-      //print("device second screen: ${data['device']}");
+
       return Scaffold(
+        backgroundColor: Colors.white,
         body: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              Center(
-                  child: Text(Provider.of<BluetoothConnection>(context, listen: true).getSpeed())
+                Speedometer(
+                  size: 250,
+                  minValue: 0,
+                  maxValue: 240,
+                  currentValue: Provider.of<BluetoothConnection>(context, listen: true).car.getSpeed(),
+                  displayText: 'km/h',
+                  backgroundColor: Colors.white,
+                  meterColor: Color(0xFF0D67B5),
+                  warningColor: Color(0xFF0D67B5),
+
+               ),
+              Expanded(
+                child:
+                Divider(
+                    color: Colors.black
+                )
+              ),
+              Expanded(
+                child:
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children:<Widget>[
+                  Expanded(
+                    child: Text('No. of passengers:')),
+                  Expanded(
+                      child: Text('Car model:'))
+                ]
+              )
               )
             ]
-        ),);
+        ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Overview",
+            backgroundColor: Color(0xFF0D67B5),
+          ),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings),
+              label: "Settings",
+              backgroundColor: Color(0xFF0D67B5),
+          )
+        ],
+        backgroundColor: Color(0xFF0D67B5),
+        unselectedItemColor: Colors.white,
+        selectedItemColor: Colors.white,
+        onTap: (index) =>  Navigator.pushNamed(context, route.settingPage)
+      ),);
     }
   }

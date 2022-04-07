@@ -42,8 +42,7 @@ class _connectState extends State<connect> {
             status = 'Connected.';
           });
           Future.delayed(Duration(seconds: 2), () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => visualization(device: device)));
+            Navigator.popAndPushNamed(context, route.visualizationPage);
           });
         } else {
           print('not Connected');
