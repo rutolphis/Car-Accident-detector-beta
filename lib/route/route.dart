@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 // importing our pages into our route.dart
 import 'package:app/pages/welcome_screen.dart';
-import 'package:app/pages/sign_in.dart';
+import 'package:app/pages/sign_in_screen.dart';
 import 'package:app/pages/connect_screen.dart';
 import 'package:app/pages/visualization_screen.dart';
 import 'package:app/pages/setting_screen.dart';
+import 'package:app/pages/sign_up_screen.dart';
 
 // variable for our route names
 const String welcomePage = 'welcome';
 const String signInPage = 'sign in';
+const String signUpPage = 'sign up';
 const String connectPage = 'connect';
 const String visualizationPage = 'visualization';
 const String settingPage = 'setting';
@@ -21,6 +23,8 @@ Route<dynamic> controller(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => welcome());
     case signInPage:
       return MaterialPageRoute(builder: (context) => signIn());
+    case signUpPage:
+      return MaterialPageRoute(builder: (context) => signUp());
     case connectPage:
       return MaterialPageRoute(builder: (context) => connect());
     case visualizationPage:

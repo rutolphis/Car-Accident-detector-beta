@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart';
 import 'package:app/utilities/gps.dart';
 import 'package:app/utilities/car.dart';
+import 'package:app/utilities/user.dart';
 import 'package:app/route/route.dart' as route;
 import 'package:app/main.dart';
 
@@ -13,12 +14,13 @@ class BluetoothConnection extends ChangeNotifier{
   var device;
   late Gps location;
   late Car car;
+  late User user;
   FlutterBlue flutterBlue = FlutterBlue.instance;
 
   BluetoothConnection(){
     this.location = new Gps();
     this.car = new Car();
-
+    this.user = new User();
   }
 
   Future<bool> bluetoothConnection (){
