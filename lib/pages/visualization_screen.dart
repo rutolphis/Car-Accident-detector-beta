@@ -24,6 +24,7 @@ class _visualizationState extends State<visualization> {
   void initState() {
     connection = Provider
         .of<BluetoothConnection>(context, listen: false);
+    connection.sendData();
     super.initState();
   }
 
@@ -37,8 +38,10 @@ class _visualizationState extends State<visualization> {
         backgroundColor: Colors.white,
         body: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
+              Padding(padding: EdgeInsets.only(top:20, bottom: 50),
+                child:
                 Speedometer(
                   size: 250,
                   minValue: 0,
@@ -49,24 +52,87 @@ class _visualizationState extends State<visualization> {
                   meterColor: Color(0xFF0D67B5),
                   warningColor: Color(0xFF0D67B5),
 
-               ),
-              Expanded(
+               )
+      ),
+                Padding(
+                    padding: EdgeInsets.only(left: 20 , right: 20),
+                    child:
+                    Container(
+                        color: Colors.grey, height: 1
+                    )
+                ),
+
+              Padding(
+                padding: EdgeInsets.only(bottom: 20, top: 30),
                 child:
-                Divider(
-                    color: Colors.black
-                )
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children:<Widget>[
+                          Text('Value 1:'),
+                          Text('Value 2:')
+                      ]
+
+                    )
+      ),
+              Padding(
+                  padding: EdgeInsets.only(bottom: 30),
+                  child:
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children:<Widget>[
+                        Text('#N/A'),
+                        Text('#N/A')
+                      ]
+
+                  )
               ),
-              Expanded(
-                child:
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children:<Widget>[
-                  Expanded(
-                    child: Text('No. of passengers:')),
-                  Expanded(
-                      child: Text('Car model:'))
-                ]
-              )
+              Padding(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child:
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children:<Widget>[
+                        Text('Value 3:'),
+                        Text('Value 4:')
+                      ]
+
+                  )
+              ),
+              Padding(
+                  padding: EdgeInsets.only(bottom: 30),
+                  child:
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children:<Widget>[
+                        Text('#N/A'),
+                        Text('#N/A')
+                      ]
+
+                  )
+              ),
+              Padding(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child:
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children:<Widget>[
+                        Text('Value 5:'),
+                        Text('Value 6')
+                      ]
+
+                  )
+              ),
+              Padding(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child:
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children:<Widget>[
+                        Text('#N/A'),
+                        Text('#N/A')
+                      ]
+
+                  )
               )
             ]
         ),
@@ -86,7 +152,11 @@ class _visualizationState extends State<visualization> {
         backgroundColor: Color(0xFF0D67B5),
         unselectedItemColor: Colors.white,
         selectedItemColor: Colors.white,
-        onTap: (index) =>  Navigator.pushNamed(context, route.settingPage)
+        onTap: (index) =>  {
+          if(index == 1) {
+            Navigator.pushNamed(context, route.settingPage)
+          }
+        }
       ),);
     }
   }

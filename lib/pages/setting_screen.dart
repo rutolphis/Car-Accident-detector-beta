@@ -1,13 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:app/route/route.dart' as route;
-import 'package:flutter_blue/flutter_blue.dart';
-import 'dart:convert';
-import 'dart:io';
-import 'package:provider/provider.dart';
-import 'package:app/utilities/bluetoothService.dart';
-import 'package:app/utilities/bluetooth.dart';
-import 'package:flutter_speedometer/flutter_speedometer.dart';
-
 
 class setting extends StatefulWidget {
   @override
@@ -17,17 +9,11 @@ class setting extends StatefulWidget {
 }
 
 class _settingState extends State<setting> {
-
-  var device;
-  var connection;
+  bool _expanded = false;
 
   void initState() {
     super.initState();
   }
-
-
-  FlutterBlue flutterBlue = FlutterBlue.instance;
-
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +21,77 @@ class _settingState extends State<setting> {
     return Scaffold(
       body: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Expanded(child:
-              Text('settings')
-            ),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children:<Widget>[
-                  Expanded(
-                      child: Text('sracky')),
-                  Expanded(child: Text('cau'))
-                ]
+            Padding(
+              padding: EdgeInsets.only(top:30),
+              child:
+                  Text('Settings',
+                      style: TextStyle(fontSize: 30)
+                  )
             )
+            ,
+            Container(
+              margin: EdgeInsets.all(10),
+              color: Colors.green,
+              child: ExpansionPanelList(
+                animationDuration: Duration(milliseconds: 1000),
+                children: [
+                  ExpansionPanel(
+                    headerBuilder: (context, isExpanded) {
+                      return ListTile(
+                        title: Text('Add phone numbers', style: TextStyle(color: Color(0xFF0D67B5)),),
+                      );
+                    },
+                    body:Column(
+                      children: <Widget>[
+                        TextFormField(
+                            maxLength: 30,
+                            decoration: InputDecoration(
+                                labelText: 'Phone number',
+                                labelStyle: TextStyle(
+                                  color: Colors.black,
+                                )
+                            )
+                        ),
+                        TextFormField(
+                            maxLength: 30,
+                            decoration: InputDecoration(
+                                labelText: 'Phone number',
+                                labelStyle: TextStyle(
+                                  color: Colors.black,
+                                )
+                            )
+                        ),
+                        TextFormField(
+                            maxLength: 30,
+                            decoration: InputDecoration(
+                                labelText: 'Phone number',
+                                labelStyle: TextStyle(
+                                  color: Colors.black,
+                                )
+                            )
+                        )
+                      ],
+                    ),
+                    isExpanded: _expanded,
+                    canTapOnHeader: true,
+                  ),
+                ],
+                dividerColor: Colors.grey,
+                expansionCallback: (panelIndex, isExpanded) {
+                  _expanded = !_expanded;
+                  setState(() {
+
+                  });
+                },
+
+              ),
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(context, route.welcomePage, (Route<dynamic> route) => false);
+                }, child: Text('Log out'))
           ]
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -66,7 +110,9 @@ class _settingState extends State<setting> {
         backgroundColor: Color(0xFF0D67B5),
         unselectedItemColor: Colors.white,
         selectedItemColor: Colors.white,
-        onTap: (index) =>  Navigator.pushNamed(context, route.visualizationPage),
+        onTap: (index) =>  {if(index == 0) {
+          Navigator.pushNamed(context, route.visualizationPage)
+        }},
       ),);
   }
 }

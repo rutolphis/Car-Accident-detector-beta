@@ -20,7 +20,7 @@ class _signUpState extends State<signUp> {
       setState(() {
         response = "";
       });
-      Navigator.popAndPushNamed(context, route.signInPage);
+      Future.delayed(Duration(seconds: 2),() { Navigator.popAndPushNamed(context, route.signInPage); });
     }
     else{
       setState(() {

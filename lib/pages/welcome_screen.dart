@@ -24,8 +24,8 @@ class welcome extends StatelessWidget {
               child:
                 OutlinedButton(onPressed: () { Navigator.pushNamed(context, route.signInPage);}, child: Text('Sign in'))
             ),
-            ElevatedButton(onPressed: () { Navigator.pushNamed(context, route.signUpPage);
-
+            ElevatedButton(
+                onPressed: () { Navigator.pushNamed(context, route.signUpPage);
             }, child: Text('Sign up'))
           ]
         ),]
