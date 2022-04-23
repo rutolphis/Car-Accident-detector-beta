@@ -13,7 +13,9 @@ class signUp extends StatefulWidget {
 class _signUpState extends State<signUp> {
 
   var response = "";
-
+  void initState(){
+    Provider.of<BluetoothConnection>(context, listen: false).shockDetector();
+  }
   void handleRegister() async{
     var loginResponse = await Provider.of<BluetoothConnection>(context, listen: false).user.register();
 

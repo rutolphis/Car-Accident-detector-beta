@@ -41,6 +41,7 @@ class _connectState extends State<connect> {
   void _showMaterialDialog() {
     showDialog(
         context: navigatorKey.currentContext!,
+        barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
             title: Text('Device not found!'),

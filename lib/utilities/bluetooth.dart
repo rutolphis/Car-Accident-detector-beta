@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -10,6 +11,8 @@ import 'package:app/utilities/user.dart';
 import 'package:app/route/route.dart' as route;
 import 'package:app/main.dart';
 import 'package:bluetooth_enable_fork/bluetooth_enable_fork.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'dart:math';
 
 
 class BluetoothConnection extends ChangeNotifier{
@@ -18,6 +21,8 @@ class BluetoothConnection extends ChangeNotifier{
   late Car car;
   late User user;
   FlutterBlue flutterBlue = FlutterBlue.instance;
+  bool accidentStatus = false;
+  bool shock = false;
 
   BluetoothConnection(){
     this.location = new Gps();
@@ -40,6 +45,7 @@ class BluetoothConnection extends ChangeNotifier{
         }
         else if(connectionStatus == true) {
           print("pripojenie uspesne");
+          shockDetector();
           Future.doWhile(() async {
             if(await checkConnection(this.device) == true && this.user.token != null) {
               return true;
@@ -48,7 +54,13 @@ class BluetoothConnection extends ChangeNotifier{
               print("odhlaseny");
               return false;
             }
-            else {
+            else if(this.shock == true) {
+
+              print("odpojeny ale naraz");
+              showMaterialDialogSpecial();
+              return false;
+            }
+            else{
               print("odpojeny");
               this.device = null;
               await navigatorKey.currentState?.pushReplacementNamed(route.connectPage);
@@ -148,6 +160,19 @@ class BluetoothConnection extends ChangeNotifier{
     }
   }
 
+  void shockDetector(){
+    userAccelerometerEvents.listen((UserAccelerometerEvent event) {
+      double g = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
+      if(g > 20){
+        print(g);
+        shock = true;
+        Future.delayed(Duration(seconds: 3), () {
+          shock = false;
+        });
+      }
+    });
+  }
+
   void receiveData() async {
     var targetCharacteristic;
     if(this.device != null) {
@@ -167,7 +192,8 @@ class BluetoothConnection extends ChangeNotifier{
               notifyListeners();
               if (this.car.getSpeed() == 11) {
                 print('Nehoda sa stala!');
-                sendData();
+                showMaterialDialogNormal();
+                //sendData();
               } else {
                 print('Neni nehoda!');
               }
@@ -272,6 +298,98 @@ class BluetoothConnection extends ChangeNotifier{
     }
 
     return Future.value(true);
+  }
+
+  void showMaterialDialogNormal() {
+    Future.delayed(Duration(seconds: 15), () {
+      if(this.accidentStatus == true){
+        this.accidentStatus = false;
+      }
+      else{
+        sendData();
+        dismissDialog();
+      }
+    });
+    showDialog(
+        context: navigatorKey.currentContext!,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('The accident was recorded!',style: TextStyle(color: Colors.red)),
+            content: Text('Hey! Accident was recorder by our system, you have 15 seconds to stop system from sending data to rescue services !'),
+            actions: <Widget>[
+              TextButton(
+                  onPressed: () {
+                    this.accidentStatus = true;
+                    dismissDialog();
+                  },
+                  style: TextButton.styleFrom(
+                    primary: Colors.green,
+                    ),
+                  child: Text('No Accident!')),
+              TextButton(
+                onPressed: () async {
+                  this.accidentStatus = true;
+                  dismissDialog();
+                },
+                style: TextButton.styleFrom(
+                  primary: Colors.red,
+                ),
+                child: Text('Send rescue services!'),
+              )
+            ],
+          );
+        });
+  }
+
+  void showMaterialDialogSpecial() {
+    Future.delayed(Duration(seconds: 30), () {
+      if(this.accidentStatus == true){
+        this.accidentStatus = false;
+      }
+      else{
+        sendData();
+        dismissDialog();
+      }
+    });
+    showDialog(
+        context: navigatorKey.currentContext!,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('The accident was recorded!',style: TextStyle(color: Colors.red)),
+            content: Text('Hey! Accident was recorder by our system, you have 30 seconds to stop system from sending data to rescue services!'),
+            actions: <Widget>[
+              TextButton(
+                  onPressed: () async {
+                    this.device = null;
+                    this.accidentStatus = true;
+                    dismissDialog();
+                    await navigatorKey.currentState?.pushReplacementNamed(route.connectPage);
+                  },
+                  style: TextButton.styleFrom(
+                    primary: Colors.green,
+                  ),
+                  child: Text('No Accident!')),
+              TextButton(
+                onPressed: () async {
+                  this.device = null;
+                  this.accidentStatus = true;
+                  dismissDialog();
+                  await navigatorKey.currentState?.pushReplacementNamed(route.connectPage);
+                },
+                style: TextButton.styleFrom(
+                  primary: Colors.red,
+                ),
+                child: Text('Send rescue services!'),
+              )
+            ],
+          );
+        });
+  }
+
+  void dismissDialog() {
+    navigatorKey.currentState?.pop();
   }
 
 
