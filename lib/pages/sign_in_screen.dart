@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app/route/route.dart' as route;
 import 'package:provider/provider.dart';
 import 'package:app/utilities/bluetooth.dart';
+import 'package:app/main.dart';
+
 
 class signIn extends StatefulWidget {
   @override
@@ -19,7 +21,7 @@ class _signInState extends State<signIn> {
       setState(() {
         response = "";
       });
-      Navigator.pushNamed(context, route.connectPage);
+      navigatorKey.currentState?.pushNamed(route.connectPage);
     }
     else{
       setState(() {
@@ -35,11 +37,17 @@ class _signInState extends State<signIn> {
             Column(
                 children: <Widget>[
                   Padding(
-                    padding: EdgeInsets.only(top: 20, bottom: 40),
-                    child:
-                        Image(image: AssetImage('assets/Car Accident detector-logos.jpeg'),
-                        height: 250,
-                        fit: BoxFit.fill,)
+                      padding: EdgeInsets.only(top: 20, bottom: 40),
+                      child:
+                      ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child:
+                          Image(
+                            image: AssetImage('assets/Car Accident detector-logos.jpeg'),
+                            height: 250,
+                            fit: BoxFit.fill,
+                          )
+                      )
                   ),
                   Padding(
                     padding: EdgeInsets.only(left: 30, right: 30),

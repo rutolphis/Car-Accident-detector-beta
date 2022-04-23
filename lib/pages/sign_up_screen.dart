@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:app/route/route.dart' as route;
 import 'package:provider/provider.dart';
 import 'package:app/utilities/bluetooth.dart';
+import 'package:app/main.dart';
 
 class signUp extends StatefulWidget {
   @override
   _signUpState createState() => _signUpState();
 
-}
 
+}
 class _signUpState extends State<signUp> {
 
   var response = "";
@@ -20,7 +21,7 @@ class _signUpState extends State<signUp> {
       setState(() {
         response = "";
       });
-      Future.delayed(Duration(seconds: 2),() { Navigator.popAndPushNamed(context, route.signInPage); });
+      Future.delayed(Duration(seconds: 2),() { navigatorKey.currentState?.popAndPushNamed(route.signInPage); });
     }
     else{
       setState(() {
@@ -39,9 +40,15 @@ class _signUpState extends State<signUp> {
                     Padding(
                         padding: EdgeInsets.only(top: 20, bottom: 40),
                         child:
-                        Image(image: AssetImage('assets/Car Accident detector-logos.jpeg'),
-                          height: 250,
-                          fit: BoxFit.fill,)
+                        ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child:
+                            Image(
+                              image: AssetImage('assets/Car Accident detector-logos.jpeg'),
+                              height: 250,
+                              fit: BoxFit.fill,
+                            )
+                        )
                     ),
                     Padding(
                         padding: EdgeInsets.only(left: 30, right: 30),

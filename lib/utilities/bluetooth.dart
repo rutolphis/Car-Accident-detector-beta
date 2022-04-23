@@ -9,6 +9,7 @@ import 'package:app/utilities/car.dart';
 import 'package:app/utilities/user.dart';
 import 'package:app/route/route.dart' as route;
 import 'package:app/main.dart';
+import 'package:bluetooth_enable_fork/bluetooth_enable_fork.dart';
 
 
 class BluetoothConnection extends ChangeNotifier{
@@ -24,36 +25,94 @@ class BluetoothConnection extends ChangeNotifier{
     this.user = new User();
   }
 
-  Future<bool> bluetoothConnection (){
-    bool connectionStatus;
+  Future<bool> bluetoothConnection () async{
+    int count = 0;
+    bool connectionStatus = false;
 
-    FlutterBlue.instance.state.listen((state) async {
-      if (state == BluetoothState.off) {
-        print("Bluetooth is off.");
-      } else if (state == BluetoothState.on) {
-        print("Bluetooth is on.");
-        flutterBlue.startScan(timeout: Duration(seconds: 50));
-        flutterBlue.scanResults.listen((results) async {
-          for (ScanResult r in results) {
-            print(r.device);
-            if(r.device.name == 'e-call') {
-              this.device = r.device;
-              flutterBlue.stopScan();
-              connectionStatus = await checkConnection(device);
-              if(connectionStatus == false) {
-                connectionStatus = await connectDevice(this.device);
-                if(connectionStatus = false) {
-                  return Future.value(false);
-                }
-              }
-              receiveData();
-              accidentCheck();
+    if(await flutterBlue.isAvailable == true) {
+      await Future.doWhile(() async {
+        connectionStatus = await searchDevice();
+        print("status pripojenia:$connectionStatus");
+        if(connectionStatus == false && count <= 3) {
+          print(count);
+          count++;
+          return true;
+        }
+        else if(connectionStatus == true) {
+          print("pripojenie uspesne");
+          Future.doWhile(() async {
+            if(await checkConnection(this.device) == true && this.user.token != null) {
+              return true;
             }
+            else if(this.user.token == null){
+              print("odhlaseny");
+              return false;
+            }
+            else {
+              print("odpojeny");
+              this.device = null;
+              await navigatorKey.currentState?.pushReplacementNamed(route.connectPage);
+              return false;
+            }
+          });
+          return false;
+        }
+        else{
+          return false;
+        }
+
+      });
+
+      return Future.value(connectionStatus);
+
+    }
+    else {
+      print("Device doenst have bluetooth");
+      return Future.value(false);
+    }
+
+  }
+
+  Future<bool> searchDevice() async {
+    bool connectionStatus = false;
+    if (await flutterBlue.isOn == false) {
+      print("Bluetooth is off.");
+      await BluetoothEnable.enableBluetooth;
+    }
+    if (await flutterBlue.isOn == true) {
+      print("Bluetooth is on.");
+      flutterBlue.startScan(timeout: Duration(seconds: 5));
+      flutterBlue.scanResults.listen((results) async {
+        for (ScanResult r in results) {
+          print(r.device);
+          if (r.device.name == 'a') {
+            this.device = r.device;
+            await flutterBlue.stopScan();
+            connectionStatus = await checkConnection(device);
+            if (connectionStatus == false) {
+              connectionStatus = await connectDevice(this.device);
+              print("status po pripojeni:$connectionStatus");
+              if (connectionStatus == false) {
+                return Future.value(false);
+              }
+            }
+            receiveData();
+            //accidentCheck();
+            return Future.value(true);
           }
-        });
-      }
-    });
-    return Future.value(false);
+        }
+      });
+
+      await Future.delayed(Duration(seconds: 6));
+      await flutterBlue.stopScan();
+      print("status pri posielani:$connectionStatus");
+      return Future.value(connectionStatus);
+
+    }
+    else {
+      return Future.value(false);
+    }
+
   }
 
   Future<bool> connectDevice(device) async {
@@ -61,7 +120,7 @@ class BluetoothConnection extends ChangeNotifier{
     if(device != null) {
       await device.connect(autoConnect: false);
 
-      if(checkConnection(device) == true){
+      if(await checkConnection(device) == true){
         return Future.value(true);
       }
       else {
@@ -76,10 +135,8 @@ class BluetoothConnection extends ChangeNotifier{
   Future<bool> checkConnection(device) async {
     List<BluetoothDevice> connectedDevices = await flutterBlue.connectedDevices;
 
-    print("Pripojene zariadenia: $connectedDevices");
     if(device != null) {
       if (connectedDevices.contains(device)) {
-        print('pripojene');
         return Future.value(true);
       }
       else {
@@ -98,7 +155,7 @@ class BluetoothConnection extends ChangeNotifier{
 
       services.forEach((service) async {
         print("Service nazov:${service.uuid}");
-        if (service.uuid.toString() == "00000001-710e-4a5b-8d75-3e5b444bc3cf") {
+        if (service.uuid.toString() == "0000fff0-0000-1000-8000-00805f9b34fb") {
         print("nasiel sa sevice-");
         var characteristics = await service.characteristics;
         for (BluetoothCharacteristic c in characteristics) {
@@ -108,6 +165,12 @@ class BluetoothConnection extends ChangeNotifier{
             c.value.listen((v) {
               this.car.setSpeed(utf8.decode(v));
               notifyListeners();
+              if (this.car.getSpeed() == 11) {
+                print('Nehoda sa stala!');
+                sendData();
+              } else {
+                print('Neni nehoda!');
+              }
               print('data: ${utf8.decode(v)}');
             });
             //List<int> data = await c.read();
@@ -125,10 +188,10 @@ class BluetoothConnection extends ChangeNotifier{
   }
 
   void accidentCheck()  {
+    bool done = false;
     print("nehoda kontrola zacala");
     check() async {
-      var connectionStatus = await checkConnection(this.device);
-      if(connectionStatus == true) {
+      if(await checkConnection(this.device) == true && this.user.token != null && done == false) {
         if (this.car.getSpeed() == 11) {
           print('Nehoda sa stala!');
           sendData();
@@ -137,13 +200,31 @@ class BluetoothConnection extends ChangeNotifier{
           new Timer(Duration(milliseconds: 2000), check);
         }
       }
-      else {
-        navigatorKey.currentState?.pushNamed(route.connectPage);
+      else if(this.user.token == null && done == false){
+        print("odhlaseny");
+        done = true;
+        return;
+      }
+      else if (done == false) {
+        this.device = null;
+        await navigatorKey.currentState?.pushReplacementNamed(route.connectPage);
+        done = true;
+        return;
       }
     }
     check();
     return;
 
+  }
+
+  String? currentScreen() {
+    String? currentPath;
+    navigatorKey.currentState?.popUntil((route) {
+      currentPath = route.settings.name;
+      return true;
+    });
+
+    return currentPath;
   }
 
   void sendData() async {
@@ -173,13 +254,17 @@ class BluetoothConnection extends ChangeNotifier{
 
   }
 
+
   BluetoothDevice? getDevice(){
     return this.device;
   }
 
   Future<bool> disconnectDevice() async {
     try {
-      await this.device.disconnect();
+      if(device != null) {
+        await this.device.disconnect();
+        this.device = null;
+      }
     }
     catch (error) {
       print(error);

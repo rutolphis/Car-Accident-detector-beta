@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app/route/route.dart' as route;
+import 'package:app/utilities/bluetooth.dart';
+import 'package:provider/provider.dart';
+import 'package:app/main.dart';
 
 class setting extends StatefulWidget {
   @override
@@ -10,11 +13,41 @@ class setting extends StatefulWidget {
 
 class _settingState extends State<setting> {
   bool _expanded = false;
+  var response = "";
+  var numberOne = "";
+  var numberTwo = "";
+  var numberThree = "";
+
 
   void initState() {
+    insertNumbers();
     super.initState();
   }
 
+  void insertNumbers() async {
+    if(await Provider.of<BluetoothConnection>(context, listen: false).user.getNumbers() == true) {
+      setState(() {
+        numberOne = Provider.of<BluetoothConnection>(context, listen: false)
+            .user
+            .getNumberOne();
+        numberTwo = Provider.of<BluetoothConnection>(context, listen: false)
+            .user
+            .getNumberTwo();
+        numberThree = Provider.of<BluetoothConnection>(context, listen: false)
+            .user
+            .getNumberThree();
+      });
+      print(numberOne+numberTwo+numberThree);
+    }
+  }
+
+  void uploadNumbers() async {
+    response = await Provider.of<BluetoothConnection>(context, listen: false).user.editNumbers();
+      setState(() {
+        response;
+      });
+
+  }
   @override
   Widget build(BuildContext context) {
     //print("device second screen: ${data['device']}");
@@ -47,6 +80,9 @@ class _settingState extends State<setting> {
                       children: <Widget>[
                         TextFormField(
                             maxLength: 30,
+                            key: UniqueKey(),
+                            onChanged: (text) {Provider.of<BluetoothConnection>(context, listen: false).user.setNumberOne(text);},
+                            initialValue: numberOne,
                             decoration: InputDecoration(
                                 labelText: 'Phone number',
                                 labelStyle: TextStyle(
@@ -56,6 +92,9 @@ class _settingState extends State<setting> {
                         ),
                         TextFormField(
                             maxLength: 30,
+                            key: UniqueKey(),
+                            onChanged: (text) {Provider.of<BluetoothConnection>(context, listen: false).user.setNumberTwo(text);},
+                            initialValue: numberTwo,
                             decoration: InputDecoration(
                                 labelText: 'Phone number',
                                 labelStyle: TextStyle(
@@ -65,13 +104,20 @@ class _settingState extends State<setting> {
                         ),
                         TextFormField(
                             maxLength: 30,
+                            onChanged: (text) {Provider.of<BluetoothConnection>(context, listen: false).user.setNumberThree(text);},
+                            key: UniqueKey(),
+                            initialValue: numberThree,
                             decoration: InputDecoration(
                                 labelText: 'Phone number',
                                 labelStyle: TextStyle(
                                   color: Colors.black,
                                 )
                             )
-                        )
+                        ),
+                        ElevatedButton(onPressed: () {
+                          uploadNumbers();
+                        },
+                            child: Text('Change numbers.'))
                       ],
                     ),
                     isExpanded: _expanded,
@@ -89,9 +135,13 @@ class _settingState extends State<setting> {
               ),
             ),
             ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(context, route.welcomePage, (Route<dynamic> route) => false);
-                }, child: Text('Log out'))
+                onPressed: () async {
+                  await Provider
+                      .of<BluetoothConnection>(context, listen: false).disconnectDevice();
+                  Provider
+                      .of<BluetoothConnection>(context, listen: false).user.logOut();
+                }, child: Text('Log out')),
+            Text(response)
           ]
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -111,7 +161,7 @@ class _settingState extends State<setting> {
         unselectedItemColor: Colors.white,
         selectedItemColor: Colors.white,
         onTap: (index) =>  {if(index == 0) {
-          Navigator.pushNamed(context, route.visualizationPage)
+          navigatorKey.currentState?.pushReplacementNamed(route.visualizationPage)
         }},
       ),);
   }

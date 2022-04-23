@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:app/utilities/bluetoothService.dart';
 import 'package:app/utilities/bluetooth.dart';
 import 'package:flutter_speedometer/flutter_speedometer.dart';
+import 'package:app/main.dart';
 
 
 class visualization extends StatefulWidget {
@@ -154,7 +155,7 @@ class _visualizationState extends State<visualization> {
         selectedItemColor: Colors.white,
         onTap: (index) =>  {
           if(index == 1) {
-            Navigator.pushNamed(context, route.settingPage)
+            navigatorKey.currentState?.pushReplacementNamed( route.settingPage)
           }
         }
       ),);

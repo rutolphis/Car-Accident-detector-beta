@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:app/route/route.dart' as route;
-import 'package:flutter_blue/flutter_blue.dart';
-import 'package:app/pages/visualization_screen.dart';
 import 'package:app/utilities/bluetooth.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
-import 'package:app/utilities/bluetoothService.dart';
+import 'package:app/main.dart';
 
 
 class connect extends StatefulWidget {
@@ -17,91 +15,119 @@ class connect extends StatefulWidget {
 class _connectState extends State<connect> {
   @override
   void initState() {
-    connection = Provider
-        .of<BluetoothConnection>(context, listen: false);
-    connection.bluetoothConnection();
     connectionCheck();
     super.initState();
   }
 
-  void connectionCheck()  {
 
-    bool connectionStatus = false;
+  void connectionCheck() async {
 
-    check() async {
-      device = connection
-          .getDevice();
-
-        if(device != null) {
-          connectionStatus = await connection.checkConnection(device);
-        }
-
-        if (connectionStatus && device != null) {
-          setState(() {
-            color = Color(0xFF00E676);
-            status = 'Connected.';
-          });
-          Future.delayed(Duration(seconds: 2), () {
-            Navigator.popAndPushNamed(context, route.visualizationPage);
-          });
-        } else {
-          print('not Connected');
-          new Timer(Duration(milliseconds: 2000), check);
-        }
-      }
-      check();
-      return;
+    if (await Provider
+        .of<BluetoothConnection>(context, listen: false).bluetoothConnection() == true) {
+      setState(() {
+        color = Color(0xFF00E676);
+        status = 'Connected.';
+      });
+      Future.delayed(Duration(seconds: 2), () async {
+        await navigatorKey.currentState?.popAndPushNamed(route.visualizationPage);
+      });
+    }
+    else {
+      _showMaterialDialog();
+    }
 
   }
 
-  var status = 'Not connected';
-  Color color = Color(0xffadadad);
-  var device;
-  var connection;
+  void _showMaterialDialog() {
+    showDialog(
+        context: navigatorKey.currentContext!,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Device not found!'),
+            content: Text('Hey! Device wasnt found, so you can try to search agan or log out!'),
+            actions: <Widget>[
+              TextButton(
+                  onPressed: () {
+                    connectionCheck();
+                    _dismissDialog();
+                  },
+                  child: Text('Continue searching!')),
+              TextButton(
+                onPressed: () async {
+                  _dismissDialog();
+                  await Provider
+                      .of<BluetoothConnection>(context, listen: false).disconnectDevice();
+                  Provider
+                      .of<BluetoothConnection>(context, listen: false).user.logOut();
+                },
+                child: Text('Log out!'),
+              )
+            ],
+          );
+        });
+  }
 
-  Widget build(BuildContext context){
-    return Scaffold(
-          body: Column(
+  _dismissDialog() {
+    navigatorKey.currentState?.pop();
+  }
+
+    var status = 'Not connected';
+    Color color = Color(0xffadadad);
+
+    Widget build(BuildContext context) {
+      return Scaffold(
+        body: Column(
             children: <Widget>[
-            Image(image: AssetImage('assets/Car Accident detector-logos.jpeg')),
-            Text(
-              'How to connect',
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis
-            ),
-            Text(
-              '1. Plug and start device to the car.',
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              '2. Turn on Bluetooth on your mobile device and wait for connection.',
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Container(
-              width: 240.0,
-              height: 42.0,
-              decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5.0),
-              color: color,
+              Padding(
+                  padding: EdgeInsets.only(top: 20, bottom: 40),
+                  child:
+                  ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child:
+                      Image(
+                        image: AssetImage('assets/Car Accident detector-logos.jpeg'),
+                        height: 250,
+                        fit: BoxFit.fill,
+                      )
+                  )
               ),
-              child: Center(
-              child: Text(
-              'Connection status:\n$status',
-              style: TextStyle(
-
-                color: Colors.white,
-                height: 1,
+              Text(
+                  'How to connect',
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis
               ),
-              textAlign: TextAlign.center,
+              Text(
+                '1. Plug and start device to the car.',
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
+              Text(
+                '2. Turn on Bluetooth on your mobile device and wait for connection.',
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
+              Container(
+                width: 240.0,
+                height: 42.0,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5.0),
+                  color: color,
+                ),
+                child: Center(
+                  child: Text(
+                    'Connection status:\n$status',
+                    style: TextStyle(
+                      color: Colors.white,
+                      height: 1,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ]
-          ),
+        ),
 
 
-          );
+      );
+    }
   }
-}
