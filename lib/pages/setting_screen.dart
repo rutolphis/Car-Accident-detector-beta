@@ -136,6 +136,8 @@ class _settingState extends State<setting> {
             ),
             ElevatedButton(
                 onPressed: () async {
+                  Provider
+                      .of<BluetoothConnection>(context, listen: false).subscription.cancel();
                   await Provider
                       .of<BluetoothConnection>(context, listen: false).disconnectDevice();
                   Provider

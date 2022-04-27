@@ -5,7 +5,7 @@ import 'package:app/utilities/bluetooth.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+Future<void> main() async{
 
   runApp(
       ChangeNotifierProvider<BluetoothConnection>(

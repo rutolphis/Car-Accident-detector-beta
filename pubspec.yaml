@@ -47,6 +47,10 @@ dependencies:
   flutter_bluetooth_serial: ^0.4.0
   bluetooth_enable_fork: ^0.1.4
   open_settings: ^2.0.2
+  vibration: ^1.7.3
+  flutter_screenutil: ^5.4.0+1
+  flutter_fgbg: ^0.2.0
+  flutter_local_notifications: ^9.4.1
 
 
 dev_dependencies:
@@ -73,6 +77,8 @@ flutter:
 
   assets:
     - assets/Car Accident detector-logos.jpeg
+    - assets/car.png
+    - assets/greendot.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
