@@ -46,6 +46,7 @@ class User {
     }
     catch(error) {
       print("Chyba$error");
+      return Future.value("login unsuccesful.");
     }
 
     if(response.statusCode == 200) {
@@ -88,6 +89,7 @@ class User {
     }
     catch(error) {
       print("Chyba$error");
+      return "Register unsuccesful.";
     }
 
     if(response.statusCode == 201) {

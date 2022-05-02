@@ -25,11 +25,11 @@ class _visualizationState extends State<visualization> {
 
   Widget engineWidget() {
     if (Provider.of<BluetoothConnection>(context, listen: true).car.getEngineStatus() == true){
-      return Text("ON", style: TextStyle(color: Colors.green));
+      return Text("ON", style: TextStyle(color: Colors.green, fontSize: 18));
     }
 
     else{
-      return Text("OFF", style: TextStyle(color: Colors.red));
+      return Text("OFF", style: TextStyle(color: Colors.red,fontSize: 18));
     }
 
   }
@@ -154,7 +154,7 @@ class _visualizationState extends State<visualization> {
                 ),
 
               Padding(
-                padding: EdgeInsets.only(bottom: 20, top: 30),
+                padding: EdgeInsets.only(bottom: 20, top: 30, right: 30),
                 child:
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -171,14 +171,20 @@ class _visualizationState extends State<visualization> {
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children:<Widget>[
-                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getVin()),
-                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getTemperature())
+                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getVin(), style: TextStyle(
+                          color: Color(0xFF0D67B5),
+                          fontSize: 16,
+                        )),
+                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getTemperature(), style: TextStyle(
+                            color: Color(0xFF0D67B5),
+        fontSize: 18,
+      ))
                       ]
 
                   )
               ),
               Padding(
-                  padding: EdgeInsets.only(bottom: 20),
+                  padding: EdgeInsets.only(bottom: 20, right: 30),
                   child:
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -195,14 +201,20 @@ class _visualizationState extends State<visualization> {
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children:<Widget>[
-                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getRmp()),
-                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getPedalPosition())
+                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getRmp(), style: TextStyle(
+                          color: Color(0xFF0D67B5),
+                          fontSize: 18,
+                        )),
+                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getPedalPosition(), style: TextStyle(
+                          color: Color(0xFF0D67B5),
+                          fontSize: 18,
+                        ))
                       ]
 
                   )
               ),
               Padding(
-                  padding: EdgeInsets.only(bottom: 20),
+                  padding: EdgeInsets.only(bottom: 20,right:30),
                   child:
                   Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -220,7 +232,22 @@ class _visualizationState extends State<visualization> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children:<Widget>[
                         engineWidget(),
-                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getGForce().toString())
+                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.getGForce().toStringAsFixed(2), style: TextStyle(
+                          color: Color(0xFF0D67B5),
+                          fontSize: 18,
+                        ))
+                      ]
+
+                  )
+              ),
+              Padding(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child:
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children:<Widget>[
+                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.accelarationX + " " +Provider.of<BluetoothConnection>(context, listen: true).car.accelarationY + " " +Provider.of<BluetoothConnection>(context, listen: true).car.accelarationZ),
+                        Text(Provider.of<BluetoothConnection>(context, listen: true).car.rotationX + " " +Provider.of<BluetoothConnection>(context, listen: true).car.rotationY + " " +Provider.of<BluetoothConnection>(context, listen: true).car.rotationZ)
                       ]
 
                   )

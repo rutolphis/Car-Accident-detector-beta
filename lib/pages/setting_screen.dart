@@ -57,13 +57,16 @@ class _settingState extends State<setting> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Padding(
-              padding: EdgeInsets.only(top:30),
+              padding: EdgeInsets.only(top:30, bottom: 20),
               child:
                   Text('Settings',
                       style: TextStyle(fontSize: 30)
                   )
             )
             ,
+          Padding(
+          padding: EdgeInsets.only( bottom: 50),
+          child:
             Container(
               margin: EdgeInsets.all(10),
               color: Colors.green,
@@ -133,7 +136,8 @@ class _settingState extends State<setting> {
                 },
 
               ),
-            ),
+            )
+          ),
             ElevatedButton(
                 onPressed: () async {
                   Provider

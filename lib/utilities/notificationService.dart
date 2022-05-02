@@ -27,12 +27,12 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
-        onSelectNotification: selectNotification
+        onSelectNotification: await navigatorKey.currentState?.pushNamed(route.visualizationPage)
     );
   }
 
   Future selectNotification(String payload) async {
-    await  navigatorKey.currentState?.pushNamed( route.visualizationPage);
+    await  navigatorKey.currentState?.pushNamed(route.visualizationPage);
   }
   static final NotificationService _notificationService =
   NotificationService._internal();

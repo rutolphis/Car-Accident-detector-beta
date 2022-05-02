@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app/route/route.dart' as route;
 import 'package:app/main.dart';
+import 'package:app/utilities/notificationService.dart';
 
 class welcome extends StatelessWidget {
     @override

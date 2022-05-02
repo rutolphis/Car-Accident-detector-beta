@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:core';
+import 'dart:io';
 import 'dart:math';
 
 class Car {
@@ -7,12 +9,12 @@ class Car {
   late String rmp = "-";
   late String pedalPosition = "-";
   late String temperature = "-";
-  late String rotationX = "";
-  late String rotationY = "";
-  late String rotationZ = "";
-  late String accelarationX = "";
-  late String accelarationY = "";
-  late String accelarationZ = "";
+  late String rotationX = "-";
+  late String rotationY = "-";
+  late String rotationZ = "-";
+  late String accelarationX = "-";
+  late String accelarationY = "-";
+  late String accelarationZ = "-";
   late double gforce = 0;
   bool dot1 = true;
   bool dot2 = true;
@@ -20,6 +22,32 @@ class Car {
   bool dot4 = true;
   bool dot5 = true;
   bool engineStatus = false;
+
+
+  //accident data set
+  var vinA = "-";
+  late int speedA = 0;
+  late String rmpA = "-";
+  late String pedalPositionA = "-";
+  late String temperatureA = "-";
+  late double rotationXA;
+  late double rotationYA;
+  late double rotationZA;
+  late double accelarationXA;
+  late double accelarationYA;
+  late double accelarationZA;
+  late double gforceA = 0;
+  bool dot1A = true;
+  bool dot2A = true;
+  bool dot3A = true;
+  bool dot4A = true;
+  bool dot5A = true;
+  bool engineStatusA = false;
+  late String impactSide = "-";
+  bool carRoof = false;
+  double impactAngle = 0;
+  int rotationCount = 0;
+
 
   Car(){
   }
@@ -211,5 +239,78 @@ class Car {
   bool getEngineStatus() {
     return engineStatus;
   }
+
+  void accidentDataset(){
+    this.vinA = this.vin;
+    this.speedA = this.speed;
+    this.rmpA = this.rmp;
+    this.pedalPositionA = this.pedalPosition;
+    this.temperatureA = this.temperature;
+    this.rotationXA = double.tryParse(this.rotationX) ?? 0;
+    this.rotationYA = double.tryParse(this.rotationY) ?? 0;
+    this.rotationZA = double.tryParse(this.rotationZ) ?? 0;
+    this.accelarationXA = double.tryParse(this.accelarationX) ?? 0;
+    this.accelarationYA = double.tryParse(this.accelarationY) ?? 0;
+    this.accelarationZA = double.tryParse(this.accelarationZ) ?? 0;
+    this.gforceA = this.gforce;
+    this.dot1A = this.dot1;
+    this.dot2A = this.dot2;
+    this.dot3A = this.dot3;
+    this.dot4A = this.dot4;
+    this.dot5A = this.dot5;
+    this.engineStatusA = this.engineStatus;
+  }
+
+  void calImpactSide() {
+
+    if(atan2(accelarationXA,accelarationYA) > 0){
+      impactAngle = (180/pi) * atan2(accelarationXA,accelarationYA);
+    }
+    else {
+      impactAngle = (180/pi) * (atan2(accelarationXA,accelarationYA)+2*pi);
+    }
+
+    print("naraz ${impactAngle} os x ${accelarationXA}, y${accelarationYA}");
+
+  }
+
+  void calCarPosition() {
+    if((double.tryParse(this.accelarationZ) ?? 0) > 0){
+      this.carRoof = false;
+    }
+    else {
+      this.carRoof = true;
+    }
+  }
+
+  void calCarRotation() {
+    bool done = false;
+    bool rotated = false;
+    double lastRotation = 0;
+
+    Timer(const Duration(seconds: 3), () {done = true;});
+
+    Future.doWhile(() {
+      if(done == false){
+        if((double.tryParse(this.accelarationZ) ??
+        0) < 0 && rotated == false){
+      rotated = true;
+      }
+        if (rotated == true && (double.tryParse(this.accelarationZ) ??
+            0) > 0){
+          rotated = false;
+          this.rotationCount++;
+    }
+
+      } else {
+        print("otocenie ${rotationCount}");
+        return false;
+    }
+      return true;
+
+    });
+
+  }
+
 
 }

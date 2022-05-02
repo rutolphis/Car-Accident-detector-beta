@@ -56,8 +56,12 @@ class _connectState extends State<connect> {
               TextButton(
                 onPressed: () async {
                   _dismissDialog();
-                  Provider
-                      .of<BluetoothConnection>(context, listen: false).subscription.cancel();
+                  if(Provider.of<BluetoothConnection>(context, listen: false).subscription != null) {
+                    Provider
+                        .of<BluetoothConnection>(context, listen: false)
+                        .subscription
+                        .cancel();
+                  }
                   Provider
                       .of<BluetoothConnection>(context, listen: false).device = null;
                   await Provider
@@ -96,21 +100,32 @@ class _connectState extends State<connect> {
                       )
                   )
               ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                  child:
               Text(
                   'How to connect',
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis
+              )
               ),
+          Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child:
               Text(
                 '1. Plug and start device to the car.',
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-              ),
+              )
+      ),
+          Padding(
+          padding: EdgeInsets.only(bottom: 20),
+          child:
               Text(
                 '2. Turn on Bluetooth on your mobile device and wait for connection.',
                 textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
+              )
+      ),
               Container(
                 width: 240.0,
                 height: 42.0,

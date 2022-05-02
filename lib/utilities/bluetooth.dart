@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'package:provider/provider.dart';
 import 'package:app/utilities/car.dart';
 import 'package:http/http.dart';
 import 'package:app/utilities/gps.dart';
@@ -15,7 +14,9 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:math';
 import 'package:vibration/vibration.dart';
 import 'package:flutter_fgbg/flutter_fgbg.dart';
-
+import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 
 class BluetoothConnection extends ChangeNotifier{
   var device;
@@ -27,6 +28,8 @@ class BluetoothConnection extends ChangeNotifier{
   bool shock = false;
   late StreamSubscription<FGBGType> subscription;
   late FGBGType appStatus;
+  late bool dialogStatus = false;
+  bool isVisible = false;
 
   BluetoothConnection(){
     this.location = new Gps();
@@ -198,22 +201,28 @@ class BluetoothConnection extends ChangeNotifier{
             c.value.listen((v) async {
               parseData(utf8.decode(v));
               notifyListeners();
-              if (this.car.getGForce() > 2) {
-                print('Nehoda sa stala!');
+              car.calCarRotation();
+              if (this.car.getGForce() > 1.3 && this.dialogStatus == false) {
+                car.accidentDataset();
+                dialogStatus = true;
+                Future.delayed(Duration(seconds: 30), () {
+                  dialogStatus = false;
+                });
                 if (await Vibration.hasVibrator()) {
                   Vibration.vibrate();
                   }
-                showMaterialDialogNormal();
-                //sendData();
-              } else {
-                print('Neni nehoda!');
+                car.calImpactSide();
+                car.calCarRotation();
+                if(await checkInternet() == true){
+                  showMaterialDialogNormal();
+                }
+                else {
+                  showMaterialDialogICall();
+                }
               }
               print('data: ${utf8.decode(v)}');
-            });
-            //List<int> data = await c.read();
-            //decode = utf8.decode(data);
-            //print("Vypis$data");
-            //print("Dekodovany vypis:$decode");
+            }
+            );
           }
         };
         }
@@ -222,16 +231,6 @@ class BluetoothConnection extends ChangeNotifier{
     else{
       print("Ziadne zariadene! (Services)");
     }
-  }
-
-  String? currentScreen() {
-    String? currentPath;
-    navigatorKey.currentState?.popUntil((route) {
-      currentPath = route.settings.name;
-      return true;
-    });
-
-    return currentPath;
   }
 
   void sendData() async {
@@ -282,6 +281,11 @@ class BluetoothConnection extends ChangeNotifier{
   }
 
   void showMaterialDialogNormal() {
+    Future.delayed(Duration(seconds: 2), () {
+      isVisible = true;
+      notifyListeners();
+      car.calCarPosition();
+    });
     Future.delayed(Duration(seconds: 15), () {
       if(this.accidentStatus == true){
         this.accidentStatus = false;
@@ -299,18 +303,28 @@ class BluetoothConnection extends ChangeNotifier{
             title: Text('The accident was recorded!',style: TextStyle(color: Colors.red)),
             content: Text('Hey! Accident was recorder by our system, you have 15 seconds to stop system from sending data to rescue services !'),
             actions: <Widget>[
+              Visibility(
+                visible: Provider.of<BluetoothConnection>(context, listen: true).isVisible,
+                  child:
               TextButton(
                   onPressed: () {
                     this.accidentStatus = true;
+                    print(" naraz${car.carRoof} ${car.impactAngle} ${car.rotationCount}");
+                    isVisible = false;
                     dismissDialog();
                   },
                   style: TextButton.styleFrom(
                     primary: Colors.green,
                     ),
-                  child: Text('No Accident!')),
+                  child: Text('No Accident!'))
+              ),
+              Visibility(
+                visible: isVisible,
+              child:
               TextButton(
                 onPressed: () async {
                   this.accidentStatus = true;
+                  isVisible = false;
                   sendData();
                   dismissDialog();
                 },
@@ -318,6 +332,7 @@ class BluetoothConnection extends ChangeNotifier{
                   primary: Colors.red,
                 ),
                 child: Text('Send rescue services!'),
+              )
               )
             ],
           );
@@ -388,9 +403,81 @@ class BluetoothConnection extends ChangeNotifier{
       car.setTemperature(parsedList[3]);
       car.calculateG(double.tryParse(parsedList[4]) ?? 0, double.tryParse(parsedList[5]) ?? 0, double.tryParse(parsedList[6]) ?? 0);
       car.setDots(parsedList[10]);
+      car.setAccelerationX(parsedList[4]);
+      car.setAccelerationY(parsedList[5]);
+      car.setAccelerationZ(parsedList[6]);
+      car.setRotationX(parsedList[7]);
+      car.setRotationY(parsedList[8]);
+      car.setRotationZ(parsedList[9]);
       car.setEngineStatus();
-
     }
+  }
+
+  void showMaterialDialogICall() {
+    Future.delayed(Duration(seconds: 30), () {
+      if(this.accidentStatus == true){
+        this.accidentStatus = false;
+      }
+      else{
+        dismissDialog();
+        makePhoneCall();
+      }
+    });
+    showDialog(
+        context: navigatorKey.currentContext!,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('The accident was recorded!',style: TextStyle(color: Colors.red)),
+            content: Text('Hey! Accident was recorder by our system, but we detected that you have no internet connection, you have 30 seconds to stop calling 112!'),
+            actions: <Widget>[
+              TextButton(
+                  onPressed: () async {
+                    this.device = null;
+                    this.accidentStatus = true;
+                    dismissDialog();
+                    await navigatorKey.currentState?.pushReplacementNamed(route.connectPage);
+                  },
+                  style: TextButton.styleFrom(
+                    primary: Colors.green,
+                  ),
+                  child: Text('No Accident!')),
+              TextButton(
+                onPressed: () async {
+                  this.device = null;
+                  this.accidentStatus = true;
+                  makePhoneCall();
+                  dismissDialog();
+                  await navigatorKey.currentState?.pushReplacementNamed(route.connectPage);
+                },
+                style: TextButton.styleFrom(
+                  primary: Colors.red,
+                ),
+                child: Text('Call 112!'),
+              )
+            ],
+          );
+        });
+  }
+
+  Future<void> makePhoneCall() async {
+    if (await UrlLauncher.canLaunch('tel:112')) {
+      await UrlLauncher.launch('tel:112');
+    } else {
+      throw 'Could not launch 112';
+    }
+  }
+  Future<bool> checkInternet() async {
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return Future.value(true);
+      }
+    } on SocketException catch (_) {
+      return Future.value(false);
+    }
+
+    return Future.value(false);
   }
 
 }
