@@ -50,8 +50,8 @@ dependencies:
   vibration: ^1.7.3
   flutter_screenutil: ^5.4.0+1
   flutter_fgbg: ^0.2.0
-  flutter_local_notifications: ^9.4.1
   url_launcher: ^6.1.0
+  awesome_notifications: ^0.6.21
 
 
 dev_dependencies:
