@@ -53,13 +53,6 @@ class _connectState extends State<connect> {
               TextButton(
                 onPressed: () async {
                   _dismissDialog();
-                  if (Provider.of<BluetoothConnection>(context, listen: false)
-                          .subscription !=
-                      null) {
-                    Provider.of<BluetoothConnection>(context, listen: false)
-                        .subscription
-                        .cancel();
-                  }
                   Provider.of<BluetoothConnection>(context, listen: false)
                       .device = null;
                   await Provider.of<BluetoothConnection>(context, listen: false)

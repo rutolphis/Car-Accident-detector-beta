@@ -46,14 +46,14 @@ class User {
     }
     catch(error) {
       print("Chyba$error");
-      return Future.value("login unsuccesful.");
+      return Future.value("Login unsuccesful.");
     }
 
     if(response.statusCode == 200) {
       return Future.value("Login succesful.");
     }
     else{
-      return Future.value("login unsuccesful.");
+      return Future.value("Login unsuccesful.");
     }
   }
 
@@ -81,9 +81,6 @@ class User {
         encoding: encoding,
       ).then((response) {
         print(response.body);
-        this.registerEmail = "";
-        this.registerPassword = "";
-        this.registerConfirmPassword = "";
         return response;
       });
     }
@@ -93,6 +90,9 @@ class User {
     }
 
     if(response.statusCode == 201) {
+      this.registerEmail = "";
+      this.registerPassword = "";
+      this.registerConfirmPassword = "";
       return "Register succesful.";
     }
     else{

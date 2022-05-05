@@ -3,6 +3,7 @@ import 'package:app/route/route.dart' as route;
 import 'package:app/main.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:app/utilities/notificationService.dart';
+import 'package:wakelock/wakelock.dart';
 
 class welcome extends StatefulWidget {
   @override
@@ -13,6 +14,7 @@ class _welcomeState extends State<welcome> {
   @override
   void initState() {
     super.initState();
+    Wakelock.enable();
     AwesomeNotifications().isNotificationAllowed().then(
       (isAllowed) {
         if (!isAllowed) {

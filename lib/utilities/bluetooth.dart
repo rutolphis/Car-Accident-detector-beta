@@ -28,14 +28,18 @@ class BluetoothConnection extends ChangeNotifier {
   bool accidentStatus = false;
   bool shock = false;
   late StreamSubscription<FGBGType> subscription;
-  late FGBGType appStatus;
+  late FGBGType appStatus = FGBGType.foreground;
   late bool dialogStatus = false;
   bool isVisible = false;
+  bool rotationFlag = false;
 
   BluetoothConnection() {
     this.location = new Gps();
     this.car = new Car();
     this.user = new User();
+    subscription = FGBGEvents.stream.listen((event) {
+      appStatus = event; // FGBGType.foreground or FGBGType.background
+    });
   }
 
   Future<bool> bluetoothConnection() async {
@@ -53,9 +57,6 @@ class BluetoothConnection extends ChangeNotifier {
         } else if (connectionStatus == true) {
           print("pripojenie uspesne");
           shockDetector();
-          subscription = FGBGEvents.stream.listen((event) {
-            appStatus = event; // FGBGType.foreground or FGBGType.background
-          });
           Future.doWhile(() async {
             if (await checkConnection(this.device) == true &&
                 this.user.token != null) {
@@ -187,16 +188,18 @@ class BluetoothConnection extends ChangeNotifier {
               await c.setNotifyValue(true);
               c.value.listen((v) async {
                 parseData(utf8.decode(v));
-                notifyListeners();
-                car.calCarRotation();
+
                 if (this.car.getGForce() > 1.3 && this.dialogStatus == false) {
+                  rotationFlag = true;
+                  Future.delayed(Duration(seconds: 5), () {rotationFlag = false;});
+                  car.lastRotation = double.tryParse(car.accelarationZ) ?? 0;
                   car.accidentDataset();
                   dialogStatus = true;
 
-                  if (this.appStatus != null &&
-                      this.appStatus == FGBGType.background) {
+                  if (this.appStatus == FGBGType.background) {
                     createAccidentNotification();
                   }
+                  print("aplikacia: ${this.appStatus}");
                   Future.delayed(Duration(seconds: 30), () {
                     dialogStatus = false;
                   });
@@ -204,13 +207,25 @@ class BluetoothConnection extends ChangeNotifier {
                     Vibration.vibrate();
                   }
                   car.calImpactSide();
-                  car.calCarRotation();
+
                   if (await checkInternet() == true) {
                     showMaterialDialogNormal();
                   } else {
                     showMaterialDialogICall();
                   }
                 }
+
+                if(this.rotationFlag == true){
+                  if((double.tryParse(car.accelarationZ) ??
+                      0) > 0 && car.lastRotation < 0 || (double.tryParse(car.accelarationZ) ??
+                      0) < 0 && car.lastRotation > 0){
+                    car.lastRotation = (double.tryParse(car.accelarationZ) ??
+                        0);
+                    car.rotationCount++;
+                  }
+                  print("last rotation ${car.lastRotation} new rotation ${car.accelarationZ}");
+                }
+                notifyListeners();
                 print('data: ${utf8.decode(v)}');
               });
             }
@@ -235,14 +250,15 @@ class BluetoothConnection extends ChangeNotifier {
       "longitude": location.longitude,
       "vin": "WVWZZZ1KZ6B049523",
       "pedal_position": int.tryParse(car.getPedalPosition()) ?? 0,
-      "speed": car.getSpeed(),
-      "rotation" : 11.2569,
+      "speed": car.speedA,
+      "rotation" : car.impactAngle,
+      "acceleration": 20,
       "on_roof" : true,
-      "rotation_count" : 3,
-      "inpack_site" : 5.12,
-      "temperature" : 21.9,
-      "gforce": 15,
-      "occupied_seats" : [1,0,1,0,0],
+      "rotation_count" : car.rotationCount,
+      "inpack_site" : car.impactAngle,
+      "temperature" : car.temperatureA,
+      "gforce": car.gforceA,
+      "occupied_seats" : [car.dot1A ? 1 : 0 ,car.dot2A ? 1 : 0,car.dot3A ? 1 : 0,car.dot4A ? 1 : 0,car.dot5A ? 1 : 0],
       "status" : 1
     };
     String jsonBody = json.encode(body);
@@ -282,7 +298,7 @@ class BluetoothConnection extends ChangeNotifier {
   }
 
   void showMaterialDialogNormal() {
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(Duration(seconds: 3), () {
       isVisible = true;
       notifyListeners();
       car.calCarPosition();
@@ -292,6 +308,7 @@ class BluetoothConnection extends ChangeNotifier {
         this.accidentStatus = false;
       } else {
         sendData();
+        car.rotationCount = 0;
         dismissDialog();
       }
     });
@@ -313,8 +330,9 @@ class BluetoothConnection extends ChangeNotifier {
                       onPressed: () {
                         this.accidentStatus = true;
                         print(
-                            " naraz${car.carRoof} ${car.impactAngle} ${car.rotationCount}");
+                            " naraz${car.carPosition} ${car.impactAngle} ${car.rotationCount}");
                         isVisible = false;
+                        car.rotationCount = 0;
                         dismissDialog();
                       },
                       style: TextButton.styleFrom(
@@ -327,6 +345,7 @@ class BluetoothConnection extends ChangeNotifier {
                     onPressed: () async {
                       this.accidentStatus = true;
                       isVisible = false;
+                      car.rotationCount = 0;
                       sendData();
                       dismissDialog();
                     },

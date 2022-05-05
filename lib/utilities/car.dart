@@ -16,12 +16,13 @@ class Car {
   late String accelarationY = "-";
   late String accelarationZ = "-";
   late double gforce = 0;
-  bool dot1 = true;
-  bool dot2 = true;
-  bool dot3 = true;
-  bool dot4 = true;
-  bool dot5 = true;
+  bool dot1 = false;
+  bool dot2 = false;
+  bool dot3 = false;
+  bool dot4 = false;
+  bool dot5 = false;
   bool engineStatus = false;
+  double lastRotation = 0;
 
 
   //accident data set
@@ -37,14 +38,14 @@ class Car {
   late double accelarationYA;
   late double accelarationZA;
   late double gforceA = 0;
-  bool dot1A = true;
-  bool dot2A = true;
-  bool dot3A = true;
-  bool dot4A = true;
-  bool dot5A = true;
+  bool dot1A = false;
+  bool dot2A = false;
+  bool dot3A = false;
+  bool dot4A = false;
+  bool dot5A = false;
   bool engineStatusA = false;
   late String impactSide = "-";
-  bool carRoof = false;
+  int carPosition = 0;
   double impactAngle = 0;
   int rotationCount = 0;
 
@@ -270,38 +271,37 @@ class Car {
       impactAngle = (180/pi) * (atan2(accelarationXA,accelarationYA)+2*pi);
     }
 
-    print("naraz ${impactAngle} os x ${accelarationXA}, y${accelarationYA}");
-
   }
 
   void calCarPosition() {
-    if((double.tryParse(this.accelarationZ) ?? 0) > 0){
-      this.carRoof = false;
+    if((double.tryParse(this.accelarationZ) ?? 0).abs() > (double.tryParse(this.accelarationX) ?? 0).abs()) {
+      if ((double.tryParse(this.accelarationZ) ?? 0) > 0) {
+        this.carPosition = 0;
+      } else {
+        this.carPosition = 2;
+      }
     }
     else {
-      this.carRoof = true;
+      if ((double.tryParse(this.accelarationX) ?? 0) > 0) {
+        this.carPosition = 3;
+      } else {
+        this.carPosition = 1;
+      }
     }
   }
 
   void calCarRotation() {
     bool done = false;
-    bool rotated = false;
-    double lastRotation = 0;
+    double lastRotation = double.tryParse(this.accelarationZ) ?? 0;
 
-    Timer(const Duration(seconds: 3), () {done = true;});
+    Future.delayed(Duration(seconds: 3), () {done = true;});
 
     Future.doWhile(() {
       if(done == false){
         if((double.tryParse(this.accelarationZ) ??
-        0) < 0 && rotated == false){
-      rotated = true;
-      }
-        if (rotated == true && (double.tryParse(this.accelarationZ) ??
-            0) > 0){
-          rotated = false;
+        0) > 0 && lastRotation < 0){
           this.rotationCount++;
-    }
-
+      }
       } else {
         print("otocenie ${rotationCount}");
         return false;

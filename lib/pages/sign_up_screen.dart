@@ -13,21 +13,26 @@ class signUp extends StatefulWidget {
 class _signUpState extends State<signUp> {
 
   var response = "";
-  void initState(){
-    Provider.of<BluetoothConnection>(context, listen: false).shockDetector();
-  }
+  Color textColor = Colors.red;
+
   void handleRegister() async{
     var loginResponse = await Provider.of<BluetoothConnection>(context, listen: false).user.register();
 
     if(loginResponse == "Register succesful."){
       setState(() {
-        response = "";
+        response = "Register succesful.";
+        textColor = Colors.green;
       });
       Future.delayed(Duration(seconds: 2),() { navigatorKey.currentState?.popAndPushNamed(route.signInPage); });
     }
     else{
       setState(() {
         response = loginResponse;
+        textColor = Colors.red;
+      });
+      Future.delayed(Duration(seconds:3), () { setState(() {
+        response = "";
+      });
       });
     }
   }
@@ -100,7 +105,7 @@ class _signUpState extends State<signUp> {
                       },
                         child: Text('Sign Up')),
                     Text(
-                        response, style: const TextStyle(color: Colors.red)
+                        response, style: TextStyle(color: textColor)
                     )
                   ]
               )]

@@ -27,6 +27,11 @@ class _signInState extends State<signIn> {
       setState(() {
         response = loginResponse;
       });
+
+      Future.delayed(Duration(seconds:3), () { setState(() {
+        response = "";
+        });
+      });
     }
   }
 
