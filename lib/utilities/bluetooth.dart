@@ -10,6 +10,7 @@ import 'package:app/utilities/user.dart';
 import 'package:app/route/route.dart' as route;
 import 'package:app/main.dart';
 import 'package:bluetooth_enable_fork/bluetooth_enable_fork.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:math';
 import 'package:vibration/vibration.dart';
@@ -42,37 +43,32 @@ class BluetoothConnection extends ChangeNotifier {
     });
   }
 
+  // Cycle to determinate if device is connected to raspberri pi
   Future<bool> bluetoothConnection() async {
     int count = 0;
     bool connectionStatus = false;
 
-    if (await flutterBlue.isAvailable == true) {
+    if (await flutterBlue.isAvailable == true && await checkPermission() == true) {
       await Future.doWhile(() async {
         connectionStatus = await searchDevice();
-        print("status pripojenia:$connectionStatus");
         if (connectionStatus == false && count <= 3) {
-          print(count);
           count++;
           return true;
         } else if (connectionStatus == true) {
-          print("pripojenie uspesne");
           shockDetector();
           Future.doWhile(() async {
             if (await checkConnection(this.device) == true &&
                 this.user.token != null) {
               return true;
             } else if (this.user.token == null) {
-              print("odhlaseny");
               return false;
             } else if (this.shock == true) {
               if (await Vibration.hasVibrator()) {
                 Vibration.vibrate();
               }
-              print("odpojeny ale naraz");
               showMaterialDialogSpecial();
               return false;
             } else {
-              print("odpojeny");
               this.device = null;
               await navigatorKey.currentState
                   ?.pushReplacementNamed(route.connectPage);
@@ -92,6 +88,7 @@ class BluetoothConnection extends ChangeNotifier {
     }
   }
 
+  //Help function to BluetoothConnection() to search for wanted device and return true if founded.
   Future<bool> searchDevice() async {
     bool connectionStatus = false;
     if (await flutterBlue.isOn == false) {
@@ -131,6 +128,7 @@ class BluetoothConnection extends ChangeNotifier {
     }
   }
 
+  //Function to connect founded device to our phone
   Future<bool> connectDevice(device) async {
     print("device: $device");
     if (device != null) {
@@ -146,6 +144,7 @@ class BluetoothConnection extends ChangeNotifier {
     }
   }
 
+  //Help Function to determinate if device is still connected to our device
   Future<bool> checkConnection(device) async {
     List<BluetoothDevice> connectedDevices = await flutterBlue.connectedDevices;
 
@@ -160,6 +159,7 @@ class BluetoothConnection extends ChangeNotifier {
     }
   }
 
+  //Checking for shock of mobile phone based on accelerometer
   void shockDetector() {
     userAccelerometerEvents.listen((UserAccelerometerEvent event) {
       double g =
@@ -174,6 +174,7 @@ class BluetoothConnection extends ChangeNotifier {
     });
   }
 
+  //Function to continualy receive data from car, and also to alert accident
   void receiveData() async {
     if (this.device != null) {
       List<BluetoothService> services = await this.device.discoverServices();
@@ -191,7 +192,7 @@ class BluetoothConnection extends ChangeNotifier {
 
                 if (this.car.getGForce() > 1.3 && this.dialogStatus == false) {
                   rotationFlag = true;
-                  Future.delayed(Duration(seconds: 5), () {rotationFlag = false;});
+                  Future.delayed(Duration(seconds: 3), () {rotationFlag = false;});
                   car.lastRotation = double.tryParse(car.accelarationZ) ?? 0;
                   car.accidentDataset();
                   dialogStatus = true;
@@ -238,10 +239,11 @@ class BluetoothConnection extends ChangeNotifier {
     }
   }
 
-  void sendData() async {
+  //Sending data to server side when accident is received
+  Future<void> sendData() async {
     Response response;
     var location = await this.location.determinePosition();
-    print(location.longitude);
+    print("funguje");
     final uri =
         Uri.parse('https://bakalarka-app.herokuapp.com/api/bakalarka/nehoda');
     final headers = {'Content-Type': 'application/json'};
@@ -251,9 +253,10 @@ class BluetoothConnection extends ChangeNotifier {
       "vin": "WVWZZZ1KZ6B049523",
       "pedal_position": int.tryParse(car.getPedalPosition()) ?? 0,
       "speed": car.speedA,
-      "rotation" : car.impactAngle,
-      "acceleration": 20,
-      "on_roof" : true,
+      "acceleration":10,
+      "rotation":10,
+      "on_roof": true,
+      "car_position" : true,
       "rotation_count" : car.rotationCount,
       "inpack_site" : car.impactAngle,
       "temperature" : car.temperatureA,
@@ -303,12 +306,13 @@ class BluetoothConnection extends ChangeNotifier {
       notifyListeners();
       car.calCarPosition();
     });
-    Future.delayed(Duration(seconds: 15), () {
+    Future.delayed(Duration(seconds: 15), () async {
       if (this.accidentStatus == true) {
         this.accidentStatus = false;
       } else {
-        sendData();
+        await sendData();
         car.rotationCount = 0;
+        car.impactAngle = 0;
         dismissDialog();
       }
     });
@@ -333,6 +337,7 @@ class BluetoothConnection extends ChangeNotifier {
                             " naraz${car.carPosition} ${car.impactAngle} ${car.rotationCount}");
                         isVisible = false;
                         car.rotationCount = 0;
+                        car.impactAngle = 0;
                         dismissDialog();
                       },
                       style: TextButton.styleFrom(
@@ -345,8 +350,9 @@ class BluetoothConnection extends ChangeNotifier {
                     onPressed: () async {
                       this.accidentStatus = true;
                       isVisible = false;
+                      await sendData();
                       car.rotationCount = 0;
-                      sendData();
+                      car.impactAngle = 0;
                       dismissDialog();
                     },
                     style: TextButton.styleFrom(
@@ -360,11 +366,11 @@ class BluetoothConnection extends ChangeNotifier {
   }
 
   void showMaterialDialogSpecial() {
-    Future.delayed(Duration(seconds: 30), () {
+    Future.delayed(Duration(seconds: 30), () async {
       if (this.accidentStatus == true) {
         this.accidentStatus = false;
       } else {
-        sendData();
+        await sendData();
         dismissDialog();
       }
     });
@@ -394,7 +400,7 @@ class BluetoothConnection extends ChangeNotifier {
                 onPressed: () async {
                   this.device = null;
                   this.accidentStatus = true;
-                  sendData();
+                  await sendData();
                   dismissDialog();
                   await navigatorKey.currentState
                       ?.pushReplacementNamed(route.connectPage);
@@ -413,6 +419,7 @@ class BluetoothConnection extends ChangeNotifier {
     navigatorKey.currentState?.pop();
   }
 
+  //Parsing data from car and formatting
   void parseData(data) {
     var parsedList;
     if (data == null) {
@@ -420,7 +427,7 @@ class BluetoothConnection extends ChangeNotifier {
     } else {
       parsedList = data.split(",");
       print(parsedList);
-      if (parsedList.length > 9) {
+      if (parsedList.length > 7) {
         car.setSpeed(parsedList[0]);
         car.setRmp(parsedList[1]);
         car.setPedalPosition(parsedList[2]);
@@ -429,13 +436,10 @@ class BluetoothConnection extends ChangeNotifier {
             double.tryParse(parsedList[4]) ?? 0,
             double.tryParse(parsedList[5]) ?? 0,
             double.tryParse(parsedList[6]) ?? 0);
-        car.setDots(parsedList[10]);
+        car.setDots(parsedList[7]);
         car.setAccelerationX(parsedList[4]);
         car.setAccelerationY(parsedList[5]);
         car.setAccelerationZ(parsedList[6]);
-        car.setRotationX(parsedList[7]);
-        car.setRotationY(parsedList[8]);
-        car.setRotationZ(parsedList[9]);
         car.setEngineStatus();
       }
     }
@@ -462,11 +466,8 @@ class BluetoothConnection extends ChangeNotifier {
             actions: <Widget>[
               TextButton(
                   onPressed: () async {
-                    this.device = null;
                     this.accidentStatus = true;
                     dismissDialog();
-                    await navigatorKey.currentState
-                        ?.pushReplacementNamed(route.connectPage);
                   },
                   style: TextButton.styleFrom(
                     primary: Colors.green,
@@ -474,12 +475,9 @@ class BluetoothConnection extends ChangeNotifier {
                   child: Text('No Accident!')),
               TextButton(
                 onPressed: () async {
-                  this.device = null;
                   this.accidentStatus = true;
                   makePhoneCall();
                   dismissDialog();
-                  await navigatorKey.currentState
-                      ?.pushReplacementNamed(route.connectPage);
                 },
                 style: TextButton.styleFrom(
                   primary: Colors.red,
@@ -491,6 +489,36 @@ class BluetoothConnection extends ChangeNotifier {
         });
   }
 
+  void showMaterialDialogNoBluetooth() {
+    showDialog(
+        context: navigatorKey.currentContext!,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('You dont have bluetooth permissions!',
+                style: TextStyle(color: Colors.red)),
+            content: Text(
+                'Please allow bluetooth before using app.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () async {
+                  dismissDialog();
+                  Provider.of<BluetoothConnection>(context, listen: false)
+                      .device = null;
+                  await Provider.of<BluetoothConnection>(context, listen: false)
+                      .disconnectDevice();
+                  Provider.of<BluetoothConnection>(context, listen: false)
+                      .user
+                      .logOut();
+                },
+                child: Text('Log out!'),
+              )
+            ],
+          );
+        });
+  }
+
+  //Help function to call 112 if no internet is available
   Future<void> makePhoneCall() async {
     if (await UrlLauncher.canLaunch('tel:112')) {
       await UrlLauncher.launch('tel:112');
@@ -510,5 +538,21 @@ class BluetoothConnection extends ChangeNotifier {
     }
 
     return Future.value(false);
+  }
+
+  Future<bool> checkPermission() async {
+    if(await Permission.bluetoothConnect.isGranted != true ) {
+      await Permission.bluetoothConnect.request();
+    }
+    if(await Permission.bluetoothScan.isGranted != true ) {
+      await Permission.bluetoothScan.request();
+    }
+
+    if (await Permission.bluetoothScan.isGranted == true && await Permission.bluetoothConnect.isGranted == true) {
+      return Future.value(true);
+    }
+    else{
+      return Future.value(false);
+    }
   }
 }

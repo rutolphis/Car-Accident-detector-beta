@@ -270,6 +270,7 @@ class Car {
     else {
       impactAngle = (180/pi) * (atan2(accelarationXA,accelarationYA)+2*pi);
     }
+    print("impact: $impactAngle acceleration $accelarationXA $accelarationYA");
 
   }
 

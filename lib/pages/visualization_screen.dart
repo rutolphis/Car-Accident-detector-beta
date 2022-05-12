@@ -218,8 +218,11 @@ class _visualizationState extends State<visualization> {
                     children: <Widget>[
                       engineWidget(),
                       Text(
-                          Provider.of<BluetoothConnection>(context,
+                          (Provider.of<BluetoothConnection>(context,
                                   listen: true)
+                              .car
+                              .getGForce() == 0) ? "-" : Provider.of<BluetoothConnection>(context,
+                              listen: true)
                               .car
                               .getGForce()
                               .toStringAsFixed(2),
@@ -228,40 +231,6 @@ class _visualizationState extends State<visualization> {
                             fontSize: 18,
                           ))
                     ])),
-            Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: <Widget>[
-                      Text(Provider.of<BluetoothConnection>(context,
-                                  listen: true)
-                              .car
-                              .accelarationX +
-                          " " +
-                          Provider.of<BluetoothConnection>(context,
-                                  listen: true)
-                              .car
-                              .accelarationY +
-                          " " +
-                          Provider.of<BluetoothConnection>(context,
-                                  listen: true)
-                              .car
-                              .accelarationZ),
-                      Text(Provider.of<BluetoothConnection>(context,
-                                  listen: true)
-                              .car
-                              .rotationX +
-                          " " +
-                          Provider.of<BluetoothConnection>(context,
-                                  listen: true)
-                              .car
-                              .rotationY +
-                          " " +
-                          Provider.of<BluetoothConnection>(context,
-                                  listen: true)
-                              .car
-                              .rotationZ)
-                    ]))
           ]),
       bottomNavigationBar: BottomNavigationBar(
           items: [

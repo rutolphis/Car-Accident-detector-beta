@@ -42,7 +42,7 @@ class _connectState extends State<connect> {
           return AlertDialog(
             title: Text('Device not found!'),
             content: Text(
-                'Hey! Device wasnt found, so you can try to search agan or log out!'),
+                'Hey! Device wasn\'t found, so you can try to search again or log out!'),
             actions: <Widget>[
               TextButton(
                   onPressed: () {
@@ -79,7 +79,7 @@ class _connectState extends State<connect> {
     return Scaffold(
       body: Column(children: <Widget>[
         Padding(
-            padding: EdgeInsets.only(top: 20, bottom: 40),
+            padding: EdgeInsets.only(top: 40, bottom: 40),
             child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: Image(

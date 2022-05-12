@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Gps{
   late bool serviceEnabled;
@@ -54,8 +55,8 @@ class Gps{
 
     this.permission = await Geolocator.checkPermission();
     if (permission != LocationPermission.always) {
-      permission = await Geolocator.requestPermission();
-      if (permission != LocationPermission.always) {
+      await Permission.locationAlways.request();
+      if (await Permission.locationAlways.isGranted != true) {
         await Geolocator.openAppSettings();
         await Geolocator.openLocationSettings();
         // Permissions are denied, next time you could try
